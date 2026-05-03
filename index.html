@@ -1,0 +1,242 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+<meta charset="UTF-8">
+<title>AI mı Gerçek mi?</title>
+
+<style>
+body {
+    font-family: Arial;
+    background: #0f172a;
+    color: white;
+    text-align: center;
+}
+
+.container {
+    max-width: 600px;
+    margin: auto;
+    padding: 20px;
+}
+
+img {
+    width: 100%;
+    height: 350px;
+    object-fit: cover;
+    border-radius: 12px;
+    margin-bottom: 20px;
+}
+
+button {
+    padding: 16px 28px;
+    margin: 10px;
+    border: none;
+    border-radius: 12px;
+    cursor: pointer;
+    background: #334155;
+    color: white;
+    font-size: 18px;
+    font-weight: bold;
+    width: 40%;
+}
+
+input {
+    padding: 12px;
+    width: 70%;
+    border-radius: 10px;
+    border: none;
+    margin-top: 10px;
+}
+
+.correct { background: #22c55e !important; }
+.wrong { background: #ef4444 !important; }
+
+.hidden { display: none; }
+
+/* scoreboard görünüm */
+.scoreboard {
+    margin-top: 20px;
+    background: #1e293b;
+    padding: 15px;
+    border-radius: 12px;
+}
+</style>
+</head>
+
+<body>
+
+<div class="container">
+
+<h1>AI mı Gerçek mi?</h1>
+
+<!-- ANASAYFA -->
+<div id="start">
+<input id="username" placeholder="Adınızı girin">
+<br>
+<button onclick="startGame()">Başla</button>
+
+<div id="homeScoreboard" class="scoreboard"></div>
+</div>
+
+<!-- QUIZ -->
+<div id="quiz" class="hidden">
+<img id="image" src="">
+<br>
+<button onclick="answer('ai', this)">AI</button>
+<button onclick="answer('real', this)">Gerçek</button>
+</div>
+
+<!-- SONUÇ -->
+<div id="result" class="hidden"></div>
+
+</div>
+
+<script>
+
+let playerName = "";
+
+// SORULAR
+const allQuestions = [
+{img:"ai1.jpeg", answer:"ai"},
+{img:"ai2.jpeg", answer:"ai"},
+{img:"r1.png", answer:"real"},
+{img:"ai3.png", answer:"ai"},
+{img:"ai4.jpg", answer:"ai"},
+{img:"r2.png", answer:"real"},
+{img:"r3.jpeg", answer:"real"},
+{img:"r4.jpg", answer:"real"},
+{img:"ai5.jpeg", answer:"ai"},
+{img:"r5.jpg", answer:"real"},
+{img:"r6.jpg", answer:"real"},
+{img:"ai6.jpg", answer:"ai"},
+{img:"ai7.jpg", answer:"ai"},
+{img:"ai8.jpg", answer:"ai"},
+{img:"r7.jpg", answer:"real"},
+{img:"r8.jpg", answer:"real"},
+{img:"ai9.jpg", answer:"ai"},
+{img:"r9.jpg", answer:"real"},
+{img:"r10.jpg", answer:"real"},
+{img:"ai10.jpg", answer:"ai"},
+{img:"ai11.jpg", answer:"ai"},
+{img:"r11.jpg", answer:"real"}
+];
+
+// SHUFFLE
+function shuffle(array){
+    for(let i = array.length - 1; i > 0; i--){
+        let j = Math.floor(Math.random() * (i + 1));
+        [array[i], array[j]] = [array[j], array[i]];
+    }
+    return array;
+}
+
+let questions = shuffle([...allQuestions]);
+let current = 0;
+let score = 0;
+
+// BAŞLAT
+function startGame(){
+    let name = document.getElementById("username").value.trim();
+
+    if(name === ""){
+        alert("İsim gir!");
+        return;
+    }
+
+    playerName = name;
+
+    document.getElementById("start").classList.add("hidden");
+    document.getElementById("quiz").classList.remove("hidden");
+
+    loadQuestion();
+}
+
+// SORU
+function loadQuestion(){
+    if(current >= questions.length){
+        showResult();
+        return;
+    }
+
+    document.getElementById("image").src = questions[current].img;
+
+    let buttons = document.querySelectorAll("#quiz button");
+    buttons.forEach(btn=>{
+        btn.classList.remove("correct","wrong");
+        btn.disabled = false;
+    });
+}
+
+// CEVAP
+function answer(choice, el){
+    let correct = questions[current].answer;
+
+    let buttons = document.querySelectorAll("#quiz button");
+    buttons.forEach(btn=>btn.disabled = true);
+
+    if(choice === correct){
+        el.classList.add("correct");
+        score++;
+    } else {
+        el.classList.add("wrong");
+    }
+
+    setTimeout(()=>{
+        current++;
+        loadQuestion();
+    }, 800);
+}
+
+// SONUÇ
+function showResult(){
+    document.getElementById("quiz").classList.add("hidden");
+    document.getElementById("result").classList.remove("hidden");
+
+    saveScore();
+
+    document.getElementById("result").innerHTML = `
+    <h2>Sonuç</h2>
+    <p><b>${playerName}</b></p>
+    <p style="font-size:24px;"><b>${score} / ${questions.length}</b></p>
+    <button onclick="location.reload()">Ana Menü</button>
+    `;
+}
+
+// SKOR KAYDET
+function saveScore(){
+    let scores = JSON.parse(localStorage.getItem("scores")) || [];
+
+    scores.push({
+        name: playerName,
+        score: score
+    });
+
+    scores.sort((a,b)=>b.score - a.score);
+    scores = scores.slice(0,5);
+
+    localStorage.setItem("scores", JSON.stringify(scores));
+}
+
+// ANASAYFA SCOREBOARD
+function loadHomeScoreboard(){
+    let scores = JSON.parse(localStorage.getItem("scores")) || [];
+
+    let html = "<h3>🏆 En İyiler</h3>";
+
+    if(scores.length === 0){
+        html += "<p>Henüz skor yok</p>";
+    } else {
+        scores.forEach((s,i)=>{
+            html += `<p>${i+1}. ${s.name} - ${s.score}</p>`;
+        });
+    }
+
+    document.getElementById("homeScoreboard").innerHTML = html;
+}
+
+// SAYFA AÇILINCA
+loadHomeScoreboard();
+
+</script>
+
+</body>
+</html>
